@@ -1,9 +1,7 @@
-#include <signal.h>
-#include <stdio.h>
-#include <sys/wait.h>
-#include <unistd.h>
+// handler.h: Signal Handler 구현
 
-pid_t foreground_pgid = -1;
+// 현재 포어그라운드에서 실행중인 프로세스의 pid
+pid_t foreground_pid = -1;
 
 void catchchild(int signo)
 {
@@ -12,9 +10,6 @@ void catchchild(int signo)
     // wait되지 않은 프로세스들 모두 종료
     while ((pid = waitpid(-1, NULL, WNOHANG)) > 0)
         fprintf(stderr, "\nProcess terminated: %d\n", pid);
-
-    if (foreground_pgid == -1)
-        fprintf(stderr, "myshell> ");
 }
 
 void catchsig(int signo)
@@ -22,13 +17,13 @@ void catchsig(int signo)
     fprintf(stderr, "\n");
 
     // foreground에 실행중인 프로세스가 없다면 시그널을 무시한다.
-    if (foreground_pgid == -1) {
+    if (foreground_pid == -1) {
         fprintf(stderr, "myshell> ");
         return;
     }
 
-    kill(-foreground_pgid, signo);
-    foreground_pgid = -1;
+    kill(foreground_pid, signo);
+    foreground_pid = -1;
 }
 
 // 쉘의 시그널 핸들러 설정
